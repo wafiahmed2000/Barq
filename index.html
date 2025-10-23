@@ -46,12 +46,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
     <style>
         body {
             font-family: 'Cairo', sans-serif;
             direction: rtl;
             margin: 0;
-            background: linear-gradient(135deg, #121212, #1c2526); /* خلفية سوداء متدرجة */
+            background: linear-gradient(135deg, #121212, #1c2526);
             color: #ffffff;
             overflow-x: hidden;
         }
@@ -83,7 +84,7 @@
         .container {
             max-width: 1200px;
             margin: 20px auto;
-            background: linear-gradient(135deg, #FFC107, #FFA000); /* خلفية صفراء متدرجة */
+            background: linear-gradient(135deg, #FFC107, #FFA000);
             padding: 30px;
             border-radius: 20px;
             box-shadow: 0 10px 40px rgba(255, 193, 7, 0.6);
@@ -161,7 +162,7 @@
         #videoPlayer {
             width: 100%;
             max-width: 900px;
-            height: 506px; /* نسبة 16:9 */
+            height: 506px;
             margin: 20px auto;
             border: 4px solid #121212;
             border-radius: 15px;
@@ -246,15 +247,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
         <!-- قسم القنوات -->
         <div id="channelsSection" class="hidden animate__animated animate__fadeIn">
             <h1>قائمة القنوات</h1>
@@ -264,74 +256,49 @@
 
 
 
-
-
-<div class="channel"
-onclick="playVideo('http://176.119.29.42/0c55573d-12d8-43af-823b-25c94d67b190.m3u8')">
-
-  قناة 1
-
-</div>
-
-
-
-
-                <div class="channel" onclick="playVideo('https://www.youtube.com/embed/3tmd-ClpJxA')" data-tooltip="شاهد قناة 2 الآن!">قناة 2</div>
-
-
-
-
-                <div class="channel" onclick="playVideo('https://www.youtube.com/embed/9bZkp7q19f0')" data-tooltip="شاهد قناة 3 الآن!">قناة 3</div>
-
-
-
-                <div class="channel" onclick="playVideo('https://www.youtube.com/embed/kJQP7kiw5Fk')" data-tooltip="شاهد قناة 4 الآن!">قناة 4</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+             
+             
+             
+                <div class="channel" onclick="playVideo('http://176.119.29.42/0c55573d-12d8-43af-823b-25c94d67b190.m3u8')" data-tooltip="">قناة 1</div>
+              
+              
+              
+                <div class="channel" onclick="playVideo('http://176.119.29.42/0c55573d-12d8-43af-823b-25c94d67b190.m3u8')" data-tooltip="">قناة 2</div>
+               
+               
+               
+                <div class="channel" onclick="playVideo('http://176.119.29.42/0c55573d-12d8-43af-823b-25c94d67b190.m3u8')" data-tooltip="">قناة 3</div>
+             
+             
+             
+                <div class="channel" onclick="playVideo('http://176.119.29.42/0c55573d-12d8-43af-823b-25c94d67b190.m3u8')" data-tooltip="">قناة 4</div>
+            
+            
+            
+            
+            
             </div>
+
+
+
+
+
+
+
+
+
             <button class="back-button" onclick="showSection('homeSection')">
                 <i class="fas fa-arrow-right"></i> رجوع
             </button>
         </div>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         <!-- قسم البث -->
         <div id="liveSection" class="hidden animate__animated animate__fadeIn">
             <h1>البث المباشر</h1>
             <div id="loader" class="loader"></div>
-            <iframe id="videoPlayer" frameborder="0" allowfullscreen allow="fullscreen"></iframe>
+            <video id="videoPlayer" class="video-js vjs-default-skin" controls autoplay preload="auto" width="900" height="506">
+                <source id="videoSource" src="" type="application/x-mpegURL">
+            </video>
             <br>
             <button class="back-button" onclick="showSection('channelsSection')">
                 <i class="fas fa-arrow-right"></i> رجوع إلى القنوات
@@ -339,7 +306,39 @@ onclick="playVideo('http://176.119.29.42/0c55573d-12d8-43af-823b-25c94d67b190.m3
         </div>
     </div>
 
-    <script>
+    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+    <script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+            return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+            if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+                try {
+                    var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                    var firstSheetName = workbook.SheetNames[0];
+                    var worksheet = workbook.Sheets[firstSheetName];
+                    var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                    var filteredData = jsonData.filter(row => row.some(filledCell));
+                    var headerRowIndex = filteredData.findIndex((row, index) =>
+                        row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                    );
+                    if (headerRowIndex === -1 || headerRowIndex > 25) {
+                        headerRowIndex = 0;
+                    }
+                    var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+                    csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                    return csv;
+                } catch (e) {
+                    console.error(e);
+                    return "";
+                }
+            }
+            return gk_fileData[filename] || "";
+        }
+
         function showSection(sectionId) {
             document.getElementById('homeSection').classList.add('hidden');
             document.getElementById('channelsSection').classList.add('hidden');
@@ -348,18 +347,27 @@ onclick="playVideo('http://176.119.29.42/0c55573d-12d8-43af-823b-25c94d67b190.m3
         }
 
         function playVideo(url) {
-            const videoPlayer = document.getElementById('videoPlayer');
+            const videoPlayer = videojs('videoPlayer');
             const loader = document.getElementById('loader');
+            
             loader.style.display = 'block';
-            videoPlayer.style.display = 'none';
-            videoPlayer.src = '';
-            setTimeout(() => {
-                videoPlayer.src = url;
-                videoPlayer.style.display = 'block';
+            videoPlayer.pause();
+            
+            try {
+                videoPlayer.src({ src: url, type: 'application/x-mpegURL' });
+                videoPlayer.ready(() => {
+                    loader.style.display = 'none';
+                    videoPlayer.play().catch(error => {
+                        console.error('خطأ في تشغيل الفيديو:', error);
+                        alert('فشل تشغيل الفيديو. يرجى التحقق من الاتصال أو الرابط.');
+                    });
+                    showSection('liveSection');
+                });
+            } catch (error) {
+                console.error('خطأ في تحميل الفيديو:', error);
                 loader.style.display = 'none';
-                videoPlayer.focus();
-            }, 1500);
-            showSection('liveSection');
+                alert('فشل تحميل الفيديو. يرجى المحاولة لاحقًا.');
+            }
         }
 
         function toggleTheme() {
