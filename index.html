@@ -46,7 +46,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
-    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
     <style>
         body {
             font-family: 'Cairo', sans-serif;
@@ -159,15 +158,6 @@
         .channel:hover::after {
             opacity: 1;
         }
-        #videoPlayer {
-            width: 100%;
-            max-width: 900px;
-            height: 506px;
-            margin: 20px auto;
-            border: 4px solid #121212;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(255, 193, 7, 0.6);
-        }
         .hidden {
             display: none;
         }
@@ -247,66 +237,62 @@
 
 
 
+
+
+
+
+
         <!-- قسم القنوات -->
         <div id="channelsSection" class="hidden animate__animated animate__fadeIn">
             <h1>قائمة القنوات</h1>
             <div class="channel-grid">
-
-
-
-
-
-             
-             
-             
-                <div class="channel" onclick="playVideo('http://176.119.29.42/0c55573d-12d8-43af-823b-25c94d67b190.m3u8')" data-tooltip="">قناة 1</div>
-              
-              
-              
-                <div class="channel" onclick="playVideo('http://176.119.29.42/0c55573d-12d8-43af-823b-25c94d67b190.m3u8')" data-tooltip="">قناة 2</div>
                
                
                
-                <div class="channel" onclick="playVideo('http://176.119.29.42/0c55573d-12d8-43af-823b-25c94d67b190.m3u8')" data-tooltip="">قناة 3</div>
+               
+               
+                <div class="channel" onclick="window.location.href='http://176.119.29.42/0c55573d-12d8-43af-823b-25c94d67b190.m3u8'" data-tooltip="">قناة 1</div>
+              
+              
+              
+              
+                <div class="channel" onclick="window.location.href='http://176.119.29.42/0c55573d-12d8-43af-823b-25c94d67b190.m3u8'" data-tooltip="">قناة 2</div>
              
              
              
-                <div class="channel" onclick="playVideo('http://176.119.29.42/0c55573d-12d8-43af-823b-25c94d67b190.m3u8')" data-tooltip="">قناة 4</div>
-            
-            
-            
-            
-            
+             
+             
+                <div class="channel" onclick="window.location.href='http://176.119.29.42/0c55573d-12d8-43af-823b-25c94d67b190.m3u8'" data-tooltip="">قناة 3</div>
+             
+                
+
+
+
+                <div class="channel" onclick="window.location.href='http://176.119.29.42/0c55573d-12d8-43af-823b-25c94d67b190.m3u8'" data-tooltip="">قناة 4</div>
+           
+           
+           
+           
+           
+           
+           
+           
+           
+           
+           
+           
+           
+           
+           
+           
             </div>
-
-
-
-
-
-
-
-
 
             <button class="back-button" onclick="showSection('homeSection')">
                 <i class="fas fa-arrow-right"></i> رجوع
             </button>
         </div>
-
-        <!-- قسم البث -->
-        <div id="liveSection" class="hidden animate__animated animate__fadeIn">
-            <h1>البث المباشر</h1>
-            <div id="loader" class="loader"></div>
-            <video id="videoPlayer" class="video-js vjs-default-skin" controls autoplay preload="auto" width="900" height="506">
-                <source id="videoSource" src="" type="application/x-mpegURL">
-            </video>
-            <br>
-            <button class="back-button" onclick="showSection('channelsSection')">
-                <i class="fas fa-arrow-right"></i> رجوع إلى القنوات
-            </button>
-        </div>
     </div>
 
-    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
     <script type="text/javascript">
         var gk_isXlsx = false;
         var gk_xlsxFileLookup = {};
@@ -342,32 +328,7 @@
         function showSection(sectionId) {
             document.getElementById('homeSection').classList.add('hidden');
             document.getElementById('channelsSection').classList.add('hidden');
-            document.getElementById('liveSection').classList.add('hidden');
             document.getElementById(sectionId).classList.remove('hidden');
-        }
-
-        function playVideo(url) {
-            const videoPlayer = videojs('videoPlayer');
-            const loader = document.getElementById('loader');
-            
-            loader.style.display = 'block';
-            videoPlayer.pause();
-            
-            try {
-                videoPlayer.src({ src: url, type: 'application/x-mpegURL' });
-                videoPlayer.ready(() => {
-                    loader.style.display = 'none';
-                    videoPlayer.play().catch(error => {
-                        console.error('خطأ في تشغيل الفيديو:', error);
-                        alert('فشل تشغيل الفيديو. يرجى التحقق من الاتصال أو الرابط.');
-                    });
-                    showSection('liveSection');
-                });
-            } catch (error) {
-                console.error('خطأ في تحميل الفيديو:', error);
-                loader.style.display = 'none';
-                alert('فشل تحميل الفيديو. يرجى المحاولة لاحقًا.');
-            }
         }
 
         function toggleTheme() {
