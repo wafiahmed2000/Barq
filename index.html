@@ -1,49 +1,335 @@
-<!DOCTYPE html>
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>مشغل البث المباشر</title>
-  <style>
-    body {
-      margin: 0;
-      background: #000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-    }
-    video {
-      width: 100%;
-      height: 100%;
-      background: #000;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BARQ TV - البث المباشر المتميز</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            direction: rtl;
+            margin: 0;
+            background: linear-gradient(135deg, #121212, #1c2526);
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+        .navbar {
+            background: #121212;
+            padding: 15px 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .navbar .logo {
+            font-size: 28px;
+            font-weight: 900;
+            color: #FFC107;
+            text-shadow: 0 0 10px #FFC107;
+            animation: pulse 2s infinite;
+        }
+        .navbar .theme-toggle {
+            background: none;
+            border: none;
+            color: #FFC107;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            background: linear-gradient(135deg, #FFC107, #FFA000);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(255, 193, 7, 0.6);
+            position: relative;
+        }
+        h1 {
+            color: #121212;
+            font-size: 50px;
+            font-weight: 900;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.4);
+            animation: animate__fadeInDown 1s ease-in-out;
+        }
+        .button {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px 40px;
+            margin: 15px;
+            background: #121212;
+            color: #FFC107;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s, background-color 0.3s, box-shadow 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+        }
+        .button:hover {
+            background: #1c2526;
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+        }
+        .channel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+        .channel {
+            background: #121212;
+            padding: 20px;
+            border-radius: 10px;
+            color: #FFC107;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.3s, background-color 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+        }
+        .channel:hover {
+            background: #1c2526;
+            transform: scale(1.1);
+        }
+        .channel::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #121212;
+            color: #FFC107;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .channel:hover::after {
+            opacity: 1;
+        }
+        .hidden {
+            display: none;
+        }
+        .back-button {
+            padding: 12px 30px;
+            background: #121212;
+            color: #FFC107;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: transform 0.3s, background-color 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+        }
+        .back-button:hover {
+            background: #1c2526;
+            transform: translateY(-5px);
+        }
+        .loader {
+            display: none;
+            border: 6px solid #FFC107;
+            border-top: 6px solid #121212;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        .light-theme {
+            background: linear-gradient(135deg, #ffffff, #f0f0f0);
+        }
+        .light-theme .container {
+            background: linear-gradient(135deg, #FFC107, #FFA000);
+        }
+        .light-theme .navbar {
+            background: #ffffff;
+        }
+        .light-theme h1 {
+            color: #121212;
+        }
+        @keyframes pulse {
+            0% { text-shadow: 0 0 10px #FFC107; }
+            50% { text-shadow: 0 0 20px #FFC107; }
+            100% { text-shadow: 0 0 10px #FFC107; }
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
-  <video id="video" controls autoplay playsinline></video>
+    <div class="navbar">
+        <div class="logo">BARQ TV</div>
+        <button class="theme-toggle" onclick="toggleTheme()">
+            <i class="fas fa-moon"></i>
+        </button>
+    </div>
+    <div class="container">
+        <!-- القسم الرئيسي -->
+        <div id="homeSection" class="animate__animated animate__fadeIn">
+            <h1>BARQ TV</h1>
+            <div>
+                <a class="button" onclick="showSection('channelsSection')">
+                    <i class="fas fa-tv"></i> شاهد
+                </a>
+                <a href="https://jdwel.com" class="button" >
+                    <i class="fas fa-calendar-alt"></i> مواعيد المباريات
+                </a>
+            </div>
+        </div>
 
-  <!-- مكتبة HLS.js -->
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
-  <script>
-    const video = document.getElementById('video');
-    const videoSrc = 'http://6569ifh181.123091763.it.com/live/469683_.m3u8';
 
-    if (Hls.isSupported()) {
-      const hls = new Hls();
-      hls.loadSource(videoSrc);
-      hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED, function() {
-        video.play();
-      });
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      // لأجهزة iPhone و Safari
-      video.src = videoSrc;
-      video.play();
-    } else {
-      alert('متصفحك لا يدعم تشغيل ملفات m3u8');
-    }
-  </script>
+
+
+
+
+
+
+
+
+        <!-- قسم القنوات -->
+        <div id="channelsSection" class="hidden animate__animated animate__fadeIn">
+            <h1>قائمة القنوات</h1>
+            <div class="channel-grid">
+               
+               
+               
+               
+               
+                <div class="channel" onclick="window.location.href=http://6569ifh181.123091763.it.com/live/739003_.m3u8'" data-tooltip="">
+
+
+الاتحاد و. الهلال
+
+
+</div>
+              
+              
+              
+             
+           
+           
+           
+           
+           
+           
+           
+           
+           
+           
+           
+           
+           
+           
+           
+           
+            </div>
+
+            <button class="back-button" onclick="showSection('homeSection')">
+                <i class="fas fa-arrow-right"></i> رجوع
+            </button>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+            return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+            if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+                try {
+                    var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                    var firstSheetName = workbook.SheetNames[0];
+                    var worksheet = workbook.Sheets[firstSheetName];
+                    var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                    var filteredData = jsonData.filter(row => row.some(filledCell));
+                    var headerRowIndex = filteredData.findIndex((row, index) =>
+                        row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                    );
+                    if (headerRowIndex === -1 || headerRowIndex > 25) {
+                        headerRowIndex = 0;
+                    }
+                    var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+                    csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                    return csv;
+                } catch (e) {
+                    console.error(e);
+                    return "";
+                }
+            }
+            return gk_fileData[filename] || "";
+        }
+
+        function showSection(sectionId) {
+            document.getElementById('homeSection').classList.add('hidden');
+            document.getElementById('channelsSection').classList.add('hidden');
+            document.getElementById(sectionId).classList.remove('hidden');
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('light-theme');
+            const themeIcon = document.querySelector('.theme-toggle i');
+            themeIcon.classList.toggle('fa-moon');
+            themeIcon.classList.toggle('fa-sun');
+        }
+    </script>
 </body>
 </html>
