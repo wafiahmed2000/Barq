@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بث مباشر - إعادة تحميل تلقائي</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .status {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .status-indicator {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background-color: #4CAF50;
+            animation: pulse 2s infinite;
+        }
+        
+        .status.offline .status-indicator {
+            background-color: #f44336;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+        
+        video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 15px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .reload-info {
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+        
+        .counter {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #fdbb2d;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            button {
+                width: 80%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>البث المباشر</h1>
+            <div class="status" id="status">
+                <div class="status-indicator"></div>
+                <span id="status-text">جاري التشغيل</span>
+            </div>
+        </header>
+        
+        <main>
+            <div class="video-container">
+                <video id="videoPlayer" controls muted>
+                    <source src="https://6569ifh181.123091763.it.com/live/469683_.m3u8" type="application/x-mpegURL">
+                    متصفحك لا يدعم تشغيل الفيديو.
+                </video>
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>جاري تحميل البث...</p>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button id="reloadBtn">إعادة التحميل الآن</button>
+                <button id="toggleSound">تشغيل/كتم الصوت</button>
+            </div>
+            
+            <div class="reload-info">
+                <p>سيتم إعادة تحميل الصفحة تلقائيًا عند انقطاع البث</p>
+                <p>إعادة التحميل التالية خلال: <span class="counter" id="countdown">--</span> ثانية</p>
+            </div>
+        </main>
+        
+        <footer>
+            <p>تم التطوير بواسطه  784669594</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const video = document.getElementById('videoPlayer');
+            const loading = document.getElementById('loading');
+            const status = document.getElementById('status');
+            const statusText = document.getElementById('statusText');
+            const reloadBtn = document.getElementById('reloadBtn');
+            const toggleSound = document.getElementById('toggleSound');
+            const countdown = document.getElementById('countdown');
+            
+            let reloadTimeout;
+            let countdownInterval;
+            let reloadTime = 10; // الوقت بالثواني قبل إعادة التحميل التلقائي
+            
+            // إخفاء شاشة التحمير عند بدء التشغيل
+            video.addEventListener('loadeddata', function() {
+                loading.style.display = 'none';
+                statusText.textContent = 'جاري التشغيل';
+                clearCountdown();
+            });
+            
+            // عند حدوث خطأ في الفيديو
+            video.addEventListener('error', function() {
+                handleStreamError();
+            });
+            
+            // عند توقف البث
+            video.addEventListener('waiting', function() {
+                loading.style.display = 'flex';
+                statusText.textContent = 'جاري إعادة الاتصال...';
+            });
+            
+            // عند استئناف البث
+            video.addEventListener('playing', function() {
+                loading.style.display = 'none';
+                statusText.textContent = 'جاري التشغيل';
+                clearCountdown();
+            });
+            
+            // عند انتهاء البث
+            video.addEventListener('ended', function() {
+                handleStreamError();
+            });
+            
+            // زر إعادة التحميل اليدوي
+            reloadBtn.addEventListener('click', function() {
+                reloadPage();
+            });
+            
+            // زر التحكم في الصوت
+            toggleSound.addEventListener('click', function() {
+                video.muted = !video.muted;
+                toggleSound.textContent = video.muted ? 'تشغيل الصوت' : 'كتم الصوت';
+            });
+            
+            // معالجة أخطاء البث
+            function handleStreamError() {
+                status.classList.add('offline');
+                statusText.textContent = 'انقطع البث - جاري إعادة التحميل';
+                loading.style.display = 'flex';
+                loading.querySelector('p').textContent = 'انقطع البث - جاري إعادة التحميل';
+                
+                // بدء العد التنازلي لإعادة التحميل
+                startCountdown();
+            }
+            
+            // بدء العد التنازلي
+            function startCountdown() {
+                let timeLeft = reloadTime;
+                countdown.textContent = timeLeft;
+                
+                countdownInterval = setInterval(function() {
+                    timeLeft--;
+                    countdown.textContent = timeLeft;
+                    
+                    if (timeLeft <= 0) {
+                        reloadPage();
+                    }
+                }, 1000);
+            }
+            
+            // إيقاف العد التنازلي
+            function clearCountdown() {
+                if (countdownInterval) {
+                    clearInterval(countdownInterval);
+                    countdown.textContent = '--';
+                }
+            }
+            
+            // إعادة تحميل الصفحة
+            function reloadPage() {
+                window.location.reload();
+            }
+            
+            // محاولة تشغيل الفيديو تلقائيًا
+            video.play().catch(function(error) {
+                console.log('التشغيل التلقائي غير مسموح:', error);
+            });
+        });
+    </script>
+</body>
+</html>
